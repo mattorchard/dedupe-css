@@ -11,11 +11,13 @@ const ignoreSet = new Set(ignoreListRaw);
 
 const isDeclaringCustomProperty = (prop: string): boolean => prop.startsWith('--');
 
-const isReferencingCustomProperty = (value: string): boolean => value.startsWith('var(');
+const colorVarPatern = /(?:rgb|hsl)a?\(var\([^)]+\)\)/;
+const isReferencingCustomProperty = (value: string): boolean =>
+	value.startsWith('var(') || colorVarPatern.test(value);
 
-const orList = (options: string[]) => `(?:${options.map((o) => `(?:${o})`).join('|')})`;
+const orList = (options: string[]) => `(?:${options.join('|')})`;
 const measurementPattern = new RegExp(
-	`^-?(?:\\d+\\.)?\\d+\\s*${orList(['px', '%', 'rem', 'em', 'ch', 'vmin', 'vmax', 'vh', 'vw'])}?$`
+	`^-?\\d*\\.?\\d+\\s*${orList(['px', '%', 'rem', 'em', 'ch', 'vmin', 'vmax', 'vh', 'vw'])}?$`
 );
 
 const isMeasurement = (value: string): boolean => measurementPattern.test(value);
