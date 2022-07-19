@@ -1,4 +1,4 @@
-import type { Result } from '../helpers/domainTypes';
+import type { Result, SearchResult } from '../helpers/domainTypes';
 import LrtWorker from './lrtWorker?worker';
 import type { TaskReply } from './tasks';
 
@@ -74,6 +74,14 @@ class WorkerManager {
 
 	public async parseCss(streams: ReadableStream[]): Promise<Result[]> {
 		return await this.runTask('parseCss', streams, streams as unknown as Transferable[]);
+	}
+
+	public async searchCss(query: string, streams: ReadableStream[]): Promise<SearchResult[]> {
+		return await this.runTask(
+			'searchCss',
+			{ query, streams },
+			streams as unknown as Transferable[]
+		);
 	}
 
 	public async echo<T>(input: T): Promise<T> {

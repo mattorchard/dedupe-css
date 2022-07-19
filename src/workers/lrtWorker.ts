@@ -1,11 +1,14 @@
 import { forEachStreamsContent } from '../helpers/fileHelpers';
-import { getDuplicatedValues } from '../helpers/cssParser';
+import { findInstances, getDuplicatedValues } from '../helpers/cssParser';
 
 console.log('LRT WORKER CREATED');
 
 const taskHandler: Record<string, (...args: any[]) => Promise<any>> = {
 	echo: async (input) => input,
-	parseCss: async (streams: ReadableStream[]) => getDuplicatedValues(forEachStreamsContent(streams))
+	parseCss: async (streams: ReadableStream[]) =>
+		getDuplicatedValues(forEachStreamsContent(streams)),
+	searchCss: async ({ query, streams }: { query: string; streams: ReadableStream[] }) =>
+		findInstances(query, forEachStreamsContent(streams))
 };
 
 self.onmessage = async (event) => {

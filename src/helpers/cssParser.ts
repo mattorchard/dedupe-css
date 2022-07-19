@@ -1,7 +1,7 @@
 import postcss, { type Plugin, type PluginCreator } from 'postcss';
 import { OccurrenceMap } from './OccurrenceMap';
 import ignoreListRaw from './cssValueExcludeList.json';
-import type { Result } from './domainTypes';
+import type { SearchResult, Result } from './domainTypes';
 
 const sanitizeValue = (value: string): string => {
 	return value.toLowerCase().trim();
@@ -56,4 +56,37 @@ export const getDuplicatedValues = async (inputs: AsyncIterable<string>): Promis
 		.map(([text, count]) => ({ text, count }))
 		.filter(({ count }) => count > 1)
 		.sort((a, b) => b.count - a.count);
+};
+
+export const findInstances = async (
+	query: string,
+	inputs: AsyncIterable<string>
+): Promise<SearchResult[]> => {
+	const results = new Array<SearchResult>();
+
+	const plugin: PluginCreator<void> = (): Plugin => {
+		return {
+			postcssPlugin: 'search-values',
+			Declaration(decl) {
+				if (!sanitizeValue(decl.prop).includes(query)) return;
+
+				results.push({
+					property: decl.prop,
+					value: decl.value
+				});
+			}
+		};
+	};
+	plugin.postcss = true;
+	const processor = postcss([plugin]);
+	let inputIndex = 0;
+	for await (const input of inputs) {
+		const fileName = `Simulated file ${inputIndex + 1}`;
+		await processor.process(input, { from: fileName });
+		inputIndex += 1;
+	}
+
+	return results.sort(
+		(a, b) => a.property.localeCompare(b.property) || a.value.localeCompare(b.value)
+	);
 };
